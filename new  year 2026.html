@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 LIVE | Shaurya Kashyap - AI Expert</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Montserrat:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-glow: rgba(212, 175, 55, 0.6);
+            --bg: #000000;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; }
+
+        .main-card {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(35px);
+            -webkit-backdrop-filter: blur(35px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            padding: 50px 30px;
+            border-radius: 50px;
+            text-align: center;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 0 80px rgba(0,0,0,0.9);
+            animation: pulse-glow 4s infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            from { box-shadow: 0 0 40px rgba(0,0,0,0.9); }
+            to { box-shadow: 0 0 60px rgba(212, 175, 55, 0.2); }
+        }
+
+        h1 {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: clamp(1.8rem, 6vw, 2.8rem);
+            background: linear-gradient(to bottom, #fff, var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            letter-spacing: 5px;
+        }
+
+        .celebration-text {
+            font-size: 1.2rem;
+            color: var(--gold);
+            letter-spacing: 8px;
+            margin-bottom: 30px;
+            font-weight: 300;
+            text-transform: uppercase;
+        }
+
+        #visualizer {
+            width: 100%;
+            height: 60px;
+            margin-bottom: 25px;
+            filter: drop-shadow(0 0 8px var(--gold));
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            background: white;
+            color: black;
+            transform: scale(1.05);
+        }
+
+        .btn-wa { background: #25D366; color: white; border: none; }
+
+        #qr-display {
+            display: none;
+            margin: 20px auto;
+            padding: 15px;
+            background: #fff;
+            border-radius: 20px;
+            width: 160px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .footer b {
+            display: block;
+            color: var(--gold);
+            font-size: 1.1rem;
+            margin-top: 10px;
+            letter-spacing: 3px;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="fireworks"></canvas>
+
+<div class="main-card">
+    <h1>HAPPY NEW YEAR</h1>
+    <div class="celebration-text">2026</div>
+    
+    <canvas id="visualizer"></canvas>
+
+    <div id="qr-display">
+        <img id="qr-img" style="width:100%" src="" alt="QR Code">
+        <p style="color:black; font-size:10px; margin-top:5px; font-weight:bold">SCAN TO JOIN 2026</p>
+    </div>
+
+    <div class="controls">
+        <button class="btn" style="background:white; color:black" onclick="toggleAudio()" id="pBtn">🎵 Play Golden Brown</button>
+        <button class="btn" onclick="showQR()">🖼️ Get My Wish QR Code</button>
+        <button class="btn btn-wa" onclick="shareWA()">💬 Send on WhatsApp</button>
+        <button class="btn" onclick="shareIG()">📸 Link for IG Story</button>
+    </div>
+
+    <div class="footer">
+        MADE WITH EFFORTS AND LOVE BY
+        <b>SHAURYA KASHYAP (AI EXPERT)</b>
+    </div>
+</div>
+
+<audio id="song" loop>
+    <source src="golden_brown.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+    const song = document.getElementById('song');
+    const pBtn = document.getElementById('pBtn');
+    let aCtx, analyser, src, data;
+
+    // 1. Audio and Visualizer logic
+    function toggleAudio() {
+        if (!aCtx) {
+            aCtx = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = aCtx.createAnalyser();
+            src = aCtx.createMediaElementSource(song);
+            src.connect(analyser);
+            analyser.connect(aCtx.destination);
+            analyser.fftSize = 64;
+            data = new Uint8Array(analyser.frequencyBinCount);
+            drawVis();
+        }
+        if (song.paused) {
+            song.play();
+            pBtn.innerText = "⏸ Pause Music";
+        } else {
+            song.pause();
+            pBtn.innerText = "🎵 Play Golden Brown";
+        }
+    }
+
+    function drawVis() {
+        const vCvs = document.getElementById('visualizer');
+        const vCtx = vCvs.getContext('2d');
+        requestAnimationFrame(drawVis);
+        analyser.getByteFrequencyData(data);
+        vCtx.clearRect(0,0,vCvs.width,vCvs.height);
+        const bw = (vCvs.width / data.length) * 2.5;
+        let x = 0;
+        data.forEach(v => {
+            vCtx.fillStyle = `rgba(212, 175, 55, ${v/255})`;
+            vCtx.fillRect(x, vCvs.height - v/4, bw, v/4);
+            x += bw + 2;
+        });
+    }
+
+    // 2. QR and Sharing
+    function showQR() {
+        const box = document.getElementById('qr-display');
+        const img = document.getElementById('qr-img');
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}`;
+        box.style.display = box.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function shareWA() {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent("🎆 Happy New Year 2026! Check out Shaurya Kashyap's reveal: " + window.location.href)}`, '_blank');
+    }
+
+    function shareIG() {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Link Copied! 📸 Use the 'Link Sticker' in your Instagram Story.");
+    }
+
+    // 3. Fireworks Engine
+    const cvs = document.getElementById('fireworks');
+    const ctx = cvs.getContext('2d');
+    cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+    let parts = [];
+
+    class Firework {
+        constructor(x,y,c) {
+            this.x=x; this.y=y; this.c=c;
+            this.v={x:(Math.random()-0.5)*12, y:(Math.random()-0.5)*12};
+            this.a=1;
+        }
+        draw() { ctx.globalAlpha=this.a; ctx.fillStyle=this.c; ctx.beginPath(); ctx.arc(this.x,this.y,2.5,0,Math.PI*2); ctx.fill(); }
+        update() { this.x+=this.v.x; this.y+=this.v.y; this.a-=0.012; }
+    }
+
+    function render() {
+        ctx.fillStyle='rgba(0,0,0,0.15)'; ctx.fillRect(0,0,cvs.width,cvs.height);
+        parts.forEach((p,i) => { if(p.a>0){p.update(); p.draw();} else parts.splice(i,1); });
+        if(Math.random()<0.06) {
+            let col=`hsl(${Math.random()*360},80%,60%)`;
+            let x=Math.random()*cvs.width, y=Math.random()*cvs.height*0.6;
+            for(let i=0;i<50;i++) parts.push(new Firework(x,y,col));
+        }
+        requestAnimationFrame(render);
+    }
+    render();
+</script>
+</body>
+</html>
